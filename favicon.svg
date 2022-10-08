@@ -4,8 +4,11 @@
    width="128"
    version="1.1"
    id="svg120"
-   sodipodi:docname="jimmac.svg"
-   inkscape:version="1.1 (c68e22c387, 2021-05-23)"
+   sodipodi:docname="favicon.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:export-filename="touch-icon-iphone.png"
+   inkscape:export-xdpi="135"
+   inkscape:export-ydpi="135"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -20,7 +23,13 @@
      inkscape:pageopacity="0"
      inkscape:pagecheckerboard="1"
      showgrid="false"
-     inkscape:current-layer="svg120" />
+     inkscape:current-layer="svg120"
+     inkscape:showpageshadow="0"
+     inkscape:deskcolor="#505050">
+    <inkscape:grid
+       type="xygrid"
+       id="grid1384" />
+  </sodipodi:namedview>
   <defs
      id="defs24">
     <linearGradient
@@ -113,7 +122,7 @@
      ry="0"
      fill="#99c1f1"
      id="rect26"
-     style="fill:#26a269" />
+     style="fill:#3584e4" />
   <path
      d="m 127.79108,197.0751 v -35.13252 c 0,-12.74708 -11.27382,-19.47682 -23.00841,-23.00841 l -72.956946,-21.94135 -75.551837,21.94439 c -12.240834,3.55432 -23.008403,10.26132 -23.008403,23.00688 v 35.13101 z"
      fill="#63452c"
@@ -412,5 +421,85 @@
        d="m 1115.856,453 c -0.841,0.004 -1.672,0.05 -2.496,0.123 v 8.896 l 9.245,-0.001 v -8.279 a 30.074,30.074 0 0 0 -6.75,-0.739 z"
        fill="#77767b"
        id="path116" />
+  </g>
+  <rect
+     style="fill:#241f31;stroke:#000000;stroke-width:2;paint-order:markers stroke fill;stop-color:#000000"
+     id="rect224"
+     width="67.31144"
+     height="122.52331"
+     x="56.129234"
+     y="79.658226"
+     rx="10.990737"
+     ry="10.990737" />
+  <rect
+     style="fill:#241f31;stroke:#000000;stroke-width:2;paint-order:markers stroke fill;stop-color:#000000"
+     id="rect332"
+     width="31.220339"
+     height="31.220339"
+     x="62.052967"
+     y="87.023308"
+     rx="7.3885159"
+     ry="7.3885159" />
+  <circle
+     style="fill:#3d3846;stroke:#000000;stroke-width:1.99999;paint-order:markers stroke fill;stop-color:#000000"
+     id="path386"
+     cx="69.942741"
+     cy="94.603012"
+     r="5.9210935" />
+  <circle
+     style="fill:#3d3846;stroke:#000000;stroke-width:1.99999;paint-order:markers stroke fill;stop-color:#000000"
+     id="circle440"
+     cx="69.942741"
+     cy="110.43334"
+     r="5.9210935" />
+  <circle
+     style="fill:#deddda;stroke:#000000;stroke-width:1;paint-order:markers stroke fill;stop-color:#000000;stroke-dasharray:none"
+     id="path489"
+     cx="84.691765"
+     cy="102.62411"
+     r="3.2973349" />
+  <circle
+     style="fill:#241f31;stroke:#000000;stroke-width:1;stroke-dasharray:none;paint-order:markers stroke fill;stop-color:#000000"
+     id="path1220"
+     cx="85.182823"
+     cy="94.295708"
+     r="1.3915546" />
+  <circle
+     style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;paint-order:markers stroke fill;stop-color:#000000"
+     id="path1222"
+     cx="85.196396"
+     cy="94.295708"
+     r="0.5255549" />
+  <g
+     id="g1388"
+     transform="translate(-0.3769989,-0.05815125)">
+    <circle
+       style="fill:#241f31;fill-opacity:1;stroke:none;stroke-width:0.999996;stroke-dasharray:none;paint-order:markers stroke fill;stop-color:#000000"
+       id="circle1380"
+       cx="70.31974"
+       cy="94.661163"
+       r="2.7139816" />
+    <circle
+       style="fill:#13111a;fill-opacity:1;stroke:none;stroke-width:0.999996;stroke-dasharray:none;paint-order:markers stroke fill;stop-color:#000000"
+       id="circle1382"
+       cx="70.31974"
+       cy="94.661163"
+       r="1.7844266" />
+  </g>
+  <g
+     id="g1394"
+     transform="translate(-0.3769989,15.772179)">
+    <circle
+       style="fill:#241f31;fill-opacity:1;stroke:none;stroke-width:0.999996;stroke-dasharray:none;paint-order:markers stroke fill;stop-color:#000000"
+       id="circle1390"
+       cx="70.31974"
+       cy="94.661163"
+       r="2.7139816" />
+    <circle
+       style="fill:#13111a;fill-opacity:1;stroke:none;stroke-width:0.999996;stroke-dasharray:none;paint-order:markers stroke fill;stop-color:#000000"
+       id="circle1392"
+       cx="70.31974"
+       cy="94.661163"
+       r="1.7844266" />
   </g>
 </svg>
