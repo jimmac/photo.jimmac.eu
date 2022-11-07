@@ -27,6 +27,9 @@
 			{% if site.env.TWITTER_USERNAME != "" %}
 			<li class="twitter"><a rel="me" href="https://twitter.com/{{ site.env.TWITTER_USERNAME }}" title="@{{ site.env.TWITTER_USERNAME }} on Twitter">Twitter</a></li>
 			{% endif %}
+			{% if site.env.MASTODON_USERNAME != "" %}
+			<li class="mastodon"><a rel="me" href="https://mastodon.social/@{{ site.env.MASTODON_USERNAME }}" title="@{{ site.env.MASTODON_USERNAME }} on Mastodon">Mastodon</a></li>
+			{% endif %}
 			{% if site.env.GITHUB_USERNAME != "" %}
 			<li class="github"><a rel="me" href="https://github.com/{{ site.env.GITHUB_USERNAME }}" title="@{{ site.env.GITHUB_USERNAME }} on Github">Github</a></li>
 			{% endif %}
