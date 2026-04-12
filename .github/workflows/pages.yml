@@ -1,4 +1,4 @@
-name: Deploy Jekyll with Plugins
+name: Deploy site to GitHub Pages
 
 on:
   push:
@@ -16,27 +16,26 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          ruby-version: '3.1'  # Adjust to match your local Ruby version
-          bundler-cache: true
+          python-version: '3.12'
 
-      - name: Install dependencies
-        run: bundle install
+      - name: Install Python dependencies
+        run: pip install Pillow
 
-      - name: Build site with Jekyll
-        run: bundle exec jekyll build
+      - name: Build site
+        run: python3 build.py
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: public
 
   deploy:
     environment:
@@ -48,4 +47,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
