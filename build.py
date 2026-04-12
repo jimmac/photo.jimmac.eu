@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build script for art.jimmac.eu picture gallery.
+Build script for photo.jimmac.eu picture gallery.
 Scans pictures/original/, extracts EXIF dates, generates thumbnails,
 and produces a complete static site in public/.
 
@@ -32,7 +32,7 @@ SIZES = {
 }
 
 IMAGE_EXTENSIONS = {
-    ".jpg", ".jpeg", ".png", ".webp", ".tiff", ".tif", ".bmp", ".gif", ".avif", ".heic", ".heif",
+    ".jpg", ".jpeg", ".png", ".webp", ".tiff", ".tif", ".bmp", ".gif", ".avif", ".heic", ".heif", ".jxl", 
 }
 
 
