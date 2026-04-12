@@ -104,9 +104,10 @@ def scan_and_sort_pictures():
         slug = slugify(filepath.name)
         exif_date = get_exif_date(filepath)
         width, height = get_dimensions(filepath)
+        ext = ".gif" if filepath.suffix.lower() == ".gif" else ".webp"
         pictures.append({
             "slug": slug,
-            "filename": f"{slug}.webp",
+            "filename": f"{slug}{ext}",
             "width": width,
             "height": height,
             "exif_date": exif_date,
@@ -118,19 +119,25 @@ def scan_and_sort_pictures():
 
 
 def process_image(src_path, slug):
+    is_gif = src_path.suffix.lower() == ".gif"
     for size_name, max_dims in SIZES.items():
         out_dir = OUTPUT_DIR / "pictures" / size_name
         out_dir.mkdir(parents=True, exist_ok=True)
-        out_path = out_dir / f"{slug}.webp"
 
-        if out_path.exists() and out_path.stat().st_mtime > src_path.stat().st_mtime:
-            continue
-
-        with Image.open(src_path) as img:
-            if img.mode not in ("RGB", "RGBA"):
-                img = img.convert("RGBA" if img.mode in ("LA", "PA") or "transparency" in img.info else "RGB")
-            img.thumbnail(max_dims, Image.Resampling.LANCZOS)
-            img.save(out_path, "WEBP", quality=85)
+        if is_gif:
+            out_path = out_dir / f"{slug}.gif"
+            if out_path.exists() and out_path.stat().st_mtime > src_path.stat().st_mtime:
+                continue
+            shutil.copy2(src_path, out_path)
+        else:
+            out_path = out_dir / f"{slug}.webp"
+            if out_path.exists() and out_path.stat().st_mtime > src_path.stat().st_mtime:
+                continue
+            with Image.open(src_path) as img:
+                if img.mode not in ("RGB", "RGBA"):
+                    img = img.convert("RGBA" if img.mode in ("LA", "PA") or "transparency" in img.info else "RGB")
+                img.thumbnail(max_dims, Image.Resampling.LANCZOS)
+                img.save(out_path, "WEBP", quality=85)
 
 
 def copy_static_assets():
