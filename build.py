@@ -36,26 +36,22 @@ IMAGE_EXTENSIONS = {
 }
 
 
-def read_config():
-    """Parse config.toml for site settings."""
-    config = {}
-    config_path = Path("config.toml")
-    if not config_path.exists():
-        return config
-    for line in config_path.read_text().splitlines():
-        stripped = line.strip()
-        if stripped.startswith("[") or stripped.startswith("#") or not stripped:
-            continue
-        if "=" in stripped:
-            key, val = stripped.split("=", 1)
-            key = key.strip()
-            val = val.strip().strip('"')
-            if val == "true":
-                val = True
-            elif val == "false":
-                val = False
-            config[key] = val
-    return config
+CONFIG = {
+    "base_url": "https://photo.jimmac.eu",
+    "title": "photo.jimmac.eu",
+    "description": "Photos by @jimmac",
+    "author_name": "Jakub Steiner",
+    "author_email": "jimmac@gmail.com",
+    "author_website": "https://jimmac.eu",
+    "allow_indexing": True,
+    "allow_image_sharing": True,
+    "allow_original_download": False,
+    "mastodon_username": "jimmac",
+    "github_username": "jimmac",
+    "instagram_username": "jimmacfx",
+    "custom_link_name": "jimmac",
+    "custom_link_url": "https://jimmac.eu",
+}
 
 
 def normalize_extensions():
@@ -204,7 +200,7 @@ def generate_picture_html(pic, index, pictures, config):
 
 def generate_javascript(config):
     """Generate the inline JavaScript for the gallery."""
-    site_title = config.get("title", "art.jimmac.eu")
+    site_title = config.get("title", "photo.jimmac.eu")
 
     return f"""<script>
   const TARGET_CLASS = 'target';
@@ -398,7 +394,7 @@ def generate_javascript(config):
 
 def generate_index_html(pictures, config):
     """Generate the complete single-page HTML."""
-    site_title = config.get("title", "art.jimmac.eu")
+    site_title = config.get("title", "photo.jimmac.eu")
     description = config.get("description", "")
     base_url = config.get("base_url", "")
     mastodon = config.get("mastodon_username", "")
@@ -502,7 +498,7 @@ def generate_404_html(config):
 def generate_picture_stubs(pictures, config):
     """Generate lightweight stub pages for social media sharing."""
     base_url = config.get("base_url", "")
-    site_title = config.get("title", "art.jimmac.eu")
+    site_title = config.get("title", "photo.jimmac.eu")
     description = config.get("description", "")
 
     for pic in pictures:
@@ -535,7 +531,7 @@ def generate_picture_stubs(pictures, config):
 
 def generate_feed_xml(pictures, config):
     """Generate an Atom feed."""
-    site_title = config.get("title", "art.jimmac.eu")
+    site_title = config.get("title", "photo.jimmac.eu")
     description = config.get("description", "")
     base_url = config.get("base_url", "")
     author_name = config.get("author_name", "")
@@ -604,7 +600,7 @@ def main():
         print(f"Error: Source directory '{SOURCE_DIR}' not found.")
         sys.exit(1)
 
-    config = read_config()
+    config = CONFIG
 
     clean = "--clean" in sys.argv
     if clean and OUTPUT_DIR.exists():
