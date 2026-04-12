@@ -232,6 +232,7 @@ body {
 	& .twitter a   { background-image: url(../img/icon-twitter.svg); }
 	& .mastodon a  { background-image: url(../img/icon-mastodon.svg); }
 	& .instagram a { background-image: url(../img/icon-instagram.svg); }
+	& .pixelfed a  { background-image: url(../img/icon-pixelfed.svg); }
 	& .rss a       { background-image: url(../img/icon-rss.svg); }
 
 	& .link a {

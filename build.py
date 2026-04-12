@@ -49,6 +49,7 @@ CONFIG = {
     "mastodon_username": "jimmac",
     "github_username": "jimmac",
     "instagram_username": "jimmacfx",
+    "pixelfed_username": "jimmac",
     "custom_link_name": "jimmac",
     "custom_link_url": "https://jimmac.eu",
 }
@@ -421,6 +422,9 @@ def generate_index_html(pictures, config):
     instagram = config.get("instagram_username", "")
     if instagram:
         social.append(f'        <li class="instagram"><a rel="me" href="https://instagram.com/{instagram}" title="Instagram">Instagram</a></li>')
+    pixelfed = config.get("pixelfed_username", "")
+    if pixelfed:
+        social.append(f'        <li class="pixelfed"><a rel="me" href="https://pixelfed.social/{pixelfed}" title="Pixelfed">Pixelfed</a></li>')
     cname = config.get("custom_link_name", "")
     curl = config.get("custom_link_url", "")
     if cname and curl:
