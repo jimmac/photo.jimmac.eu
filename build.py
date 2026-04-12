@@ -77,6 +77,65 @@ def get_exif_date(filepath):
     return datetime.fromtimestamp(os.path.getmtime(filepath))
 
 
+def get_exif_metadata(filepath):
+    """Extract photo-specific EXIF metadata: camera, shutter, iso, aperture, focal length, lens."""
+    result = {}
+    try:
+        img = Image.open(filepath)
+        exif = img._getexif()
+        if not exif:
+            return result
+        make = (exif.get(271) or "").strip()
+        model = (exif.get(272) or "").strip()
+        # Use model, but prepend make if model doesn't already contain it
+        if model:
+            if make and make.lower() not in model.lower():
+                result["camera"] = f"{make} {model}"
+            else:
+                result["camera"] = model
+        elif make:
+            result["camera"] = make
+        # Exposure time (tag 33434)
+        exp = exif.get(33434)
+        if exp:
+            if exp < 1:
+                result["shutter"] = f"1/{int(round(1 / exp))}s"
+            else:
+                result["shutter"] = f"{exp}s"
+        # F-number (tag 33437)
+        fn = exif.get(33437)
+        if fn:
+            result["aperture"] = f"f/{float(fn):g}"
+        # ISO (tag 34855)
+        iso = exif.get(34855)
+        if iso:
+            result["iso"] = str(iso)
+        # Focal length (tag 37386)
+        fl = exif.get(37386)
+        if fl:
+            result["focal_length"] = f"{float(fl):g}mm"
+        # Lens model (tag 42036)
+        lens = (exif.get(42036) or "").strip()
+        if lens:
+            result["lens"] = lens
+    except Exception:
+        pass
+    return result
+
+
+def generate_sidecar(filepath, exif_meta):
+    """Generate a .md sidecar file from EXIF metadata."""
+    sidecar_path = filepath.with_suffix(".md")
+    lines = ["---"]
+    for key in ("camera", "lens", "focal_length", "aperture", "shutter", "iso"):
+        if key in exif_meta:
+            lines.append(f"{key}: {exif_meta[key]}")
+    lines.append("---")
+    lines.append("")
+    sidecar_path.write_text("\n".join(lines), encoding="utf-8")
+    return sidecar_path
+
+
 def get_dimensions(filepath):
     with Image.open(filepath) as img:
         return img.width, img.height
@@ -87,6 +146,81 @@ def slugify(name):
     slug = re.sub(r'[^a-z0-9\-]', '-', slug)
     slug = re.sub(r'-+', '-', slug).strip('-')
     return slug
+
+
+def inline_markdown(text):
+    """Convert inline markdown (links, code, bold, italic) to HTML."""
+    text = html_escape(text)
+    # inline code: `code`
+    text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
+    # links: [text](url)
+    text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2">\1</a>', text)
+    # bold: **text** or __text__
+    text = re.sub(r'\*\*([^*]+)\*\*', r'<strong>\1</strong>', text)
+    text = re.sub(r'__([^_]+)__', r'<strong>\1</strong>', text)
+    # italic: *text* or _text_
+    text = re.sub(r'\*([^*]+)\*', r'<em>\1</em>', text)
+    text = re.sub(r'(?<!\w)_([^_]+)_(?!\w)', r'<em>\1</em>', text)
+    return text
+
+
+def parse_sidecar(sidecar_path):
+    """Parse a markdown sidecar file with optional YAML-like front matter."""
+    text = sidecar_path.read_text(encoding="utf-8")
+    meta = {}
+    body = text
+
+    # Extract front matter between --- delimiters
+    if text.startswith("---"):
+        parts = text.split("---", 2)
+        if len(parts) >= 3:
+            current_key = None
+            for line in parts[1].strip().splitlines():
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+                # List item (  - value)
+                if stripped.startswith("- ") and current_key:
+                    meta.setdefault(current_key, []).append(stripped[2:].strip())
+                elif ":" in stripped:
+                    key, val = stripped.split(":", 1)
+                    key = key.strip()
+                    val = val.strip()
+                    current_key = key
+                    if val:
+                        meta[key] = val
+            body = parts[2].strip()
+
+    # Extract title from first # heading, rest is description
+    title = None
+    description_lines = []
+    for line in body.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("# ") and title is None:
+            title = stripped[2:].strip()
+        elif title is not None:
+            description_lines.append(line)
+
+    description = "\n".join(description_lines).strip()
+
+    # Normalize tags to list
+    tags = meta.get("tags", [])
+    if isinstance(tags, str):
+        tags = [tags]
+
+    return {
+        "title": title,
+        "description": description if description else None,
+        "author": meta.get("author"),
+        "tags": tags,
+        "camera": meta.get("camera"),
+        "lens": meta.get("lens"),
+        "focal_length": meta.get("focal_length"),
+        "aperture": meta.get("aperture"),
+        "shutter": meta.get("shutter"),
+        "iso": meta.get("iso"),
+        "has_metadata": True,
+    }
 
 
 def scan_and_sort_pictures():
@@ -105,14 +239,33 @@ def scan_and_sort_pictures():
         exif_date = get_exif_date(filepath)
         width, height = get_dimensions(filepath)
         ext = ".gif" if filepath.suffix.lower() == ".gif" else ".webp"
-        pictures.append({
+        pic = {
             "slug": slug,
             "filename": f"{slug}{ext}",
             "width": width,
             "height": height,
             "exif_date": exif_date,
             "source_path": filepath,
-        })
+            "has_metadata": False,
+            "title": None,
+            "description": None,
+            "author": None,
+            "tags": [],
+            "camera": None,
+            "lens": None,
+            "focal_length": None,
+            "aperture": None,
+            "shutter": None,
+            "iso": None,
+        }
+        sidecar = filepath.with_suffix(".md")
+        if not sidecar.exists():
+            exif_meta = get_exif_metadata(filepath)
+            if exif_meta:
+                generate_sidecar(filepath, exif_meta)
+        if sidecar.exists():
+            pic.update(parse_sidecar(sidecar))
+        pictures.append(pic)
 
     pictures.sort(key=lambda p: p["exif_date"], reverse=True)
     return pictures
@@ -172,18 +325,54 @@ def generate_picture_html(pic, index, pictures, config):
     slug = pic["slug"]
     safe_name = quote(pic["filename"])
     w, h = pic["width"], pic["height"]
+    has_meta = pic.get("has_metadata", False)
+    display_name = pic.get("title") or slug
+    meta_attr = ' data-has-meta="true"' if has_meta else ""
 
     lines = [
-        f'      <li class="item" id="id-{slug}" title="{slug}">',
+        f'      <li class="item" id="id-{slug}" title="{html_escape(display_name)}"{meta_attr}>',
         f'        <figure>',
         f'          <img loading="lazy"',
         f'               src="/pictures/thumbnail/{safe_name}"',
         f'               srcset="/pictures/thumbnail/{safe_name} 640w, /pictures/large/{safe_name} 2048w"',
         f'               sizes="(min-width: 900px) 33vw, (min-width: 600px) 50vw, 100vw"',
-        f'               width="{w}" height="{h}" alt="{slug}">',
-        f'        </figure>',
-        f'        <a class="open" href="#{slug}" data-target="id-{slug}">Open</a>',
+        f'               width="{w}" height="{h}" alt="{html_escape(display_name)}">',
     ]
+
+    if has_meta:
+        lines.append(f'          <figcaption class="caption">')
+        if pic.get("title"):
+            lines.append(f'            <strong class="caption-title">{html_escape(pic["title"])}</strong>')
+        if pic.get("description"):
+            lines.append(f'            <span class="caption-desc">{inline_markdown(pic["description"])}</span>')
+        # EXIF info line: camera + exposure details
+        exif_parts = []
+        if pic.get("camera"):
+            exif_parts.append(html_escape(pic["camera"]))
+        exposure = []
+        if pic.get("focal_length"):
+            exposure.append(html_escape(pic["focal_length"]))
+        if pic.get("aperture"):
+            exposure.append(html_escape(pic["aperture"]))
+        if pic.get("shutter"):
+            exposure.append(html_escape(pic["shutter"]))
+        if pic.get("iso"):
+            exposure.append(f'ISO {html_escape(pic["iso"])}')
+        if exif_parts or exposure:
+            camera_str = exif_parts[0] if exif_parts else ""
+            exposure_str = " \u2022 ".join(exposure)
+            if camera_str and exposure_str:
+                info = f'{camera_str} \u2014 {exposure_str}'
+            else:
+                info = camera_str or exposure_str
+            lines.append(f'            <span class="caption-exif">{info}</span>')
+        if pic.get("tags"):
+            tags_str = ", ".join(pic["tags"])
+            lines.append(f'            <span class="caption-tags">{html_escape(tags_str)}</span>')
+        lines.append(f'          </figcaption>')
+
+    lines.append(f'        </figure>')
+    lines.append(f'        <a class="open" href="#{slug}" data-target="id-{slug}">Open</a>')
 
     if index > 0:
         ps = pictures[index - 1]["slug"]
@@ -195,7 +384,7 @@ def generate_picture_html(pic, index, pictures, config):
 
     lines.append(f'        <div class="actions">')
     if config.get("allow_image_sharing"):
-        lines.append(f'          <a class="share" href="#" data-share-slug="{slug}" data-share-title="{slug}" title="Share">Share</a>')
+        lines.append(f'          <a class="share" href="#" data-share-slug="{slug}" data-share-title="{html_escape(display_name)}" title="Share">Share</a>')
     if config.get("allow_original_download"):
         orig_name = quote(pic["source_path"].name)
         lines.append(f'          <a class="download" href="/pictures/original/{orig_name}" download="{orig_name}" title="Download">Download</a>')
@@ -270,6 +459,38 @@ def generate_javascript(config):
   }};
 
   let navDirection = null;
+  let captionTimer = null;
+
+  const showCaption = (item, animate) => {{
+    const caption = item.querySelector('.caption');
+    if (!caption) return;
+    caption.classList.remove('faded');
+    const kids = caption.querySelectorAll(':scope > *');
+    if (animate) {{
+      kids.forEach(c => {{ c.style.animation = 'none'; c.offsetHeight; c.style.animation = ''; }});
+    }} else {{
+      kids.forEach(c => c.style.animation = 'none');
+    }}
+    clearTimeout(captionTimer);
+    captionTimer = setTimeout(() => caption.classList.add('faded'), 2000);
+  }};
+
+  const hideCaption = (item) => {{
+    const caption = item.querySelector('.caption');
+    if (!caption) return;
+    caption.classList.add('faded');
+    clearTimeout(captionTimer);
+  }};
+
+  const toggleCaption = () => {{
+    const id = currentId();
+    if (!id) return;
+    const item = document.getElementById(id);
+    if (!item) return;
+    const caption = item.querySelector('.caption');
+    if (!caption) return;
+    caption.classList.contains('faded') ? showCaption(item) : hideCaption(item);
+  }};
 
   const setMeta = (prop, content) => {{
     const el = document.querySelector('meta[property="' + prop + '"],meta[name="' + prop + '"]');
@@ -324,10 +545,12 @@ def generate_javascript(config):
       img.src = img.dataset.thumb.replace('/pictures/thumbnail/', '/pictures/large/');
       updateMeta(photo.title, img.dataset.thumb);
     }}
+    showCaption(photo, true);
     document.title = photo.title;
   }};
 
   const closePhoto = () => {{
+    clearTimeout(captionTimer);
     document.querySelectorAll('.' + TARGET_CLASS + ' img[data-thumb]').forEach(img => {{
       img.src = img.dataset.thumb;
       if (img.dataset.srcset) img.setAttribute('srcset', img.dataset.srcset);
@@ -361,6 +584,14 @@ def generate_javascript(config):
     if (e.key === 'Escape')     {{ location.hash = ''; e.preventDefault(); }}
     if (e.key === 'ArrowRight') {{ navDirection = 'next'; clickNav('.next'); e.preventDefault(); }}
     if (e.key === 'ArrowLeft')  {{ navDirection = 'prev'; clickNav('.previous'); e.preventDefault(); }}
+    if (e.key === 'i' || e.key === 'I') {{ toggleCaption(); e.preventDefault(); }}
+  }});
+
+  document.addEventListener('mousemove', () => {{
+    const id = currentId();
+    if (!id) return;
+    const item = document.getElementById(id);
+    if (item) showCaption(item);
   }});
 
   document.addEventListener('click', (e) => {{
@@ -516,22 +747,24 @@ def generate_picture_stubs(pictures, config):
         slug = pic["slug"]
         safe_name = quote(pic["filename"])
         og_image = f"{base_url}/pictures/large/{safe_name}"
+        display_name = html_escape(pic.get("title") or slug)
+        pic_desc = html_escape(pic.get("description") or description)
         out_dir = OUTPUT_DIR / slug
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / "index.html").write_text(f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{slug} - {site_title}</title>
-  <meta property="og:title" content="{slug}">
+  <title>{display_name} - {site_title}</title>
+  <meta property="og:title" content="{display_name}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{base_url}/{slug}/">
   <meta property="og:image" content="{og_image}">
   <meta property="og:site_name" content="{site_title}">
-  <meta property="og:description" content="{description}">
+  <meta property="og:description" content="{pic_desc}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{slug}">
-  <meta name="twitter:description" content="{description}">
+  <meta name="twitter:title" content="{display_name}">
+  <meta name="twitter:description" content="{pic_desc}">
   <meta name="twitter:image" content="{og_image}">
   <script>location.replace('/#' + '{slug}');</script>
 </head>
@@ -580,13 +813,16 @@ def generate_feed_xml(pictures, config):
                 a_parts.append(f"        <uri>{html_escape(author_website)}</uri>")
             entry_author = "    <author>\n" + "\n".join(a_parts) + "\n    </author>\n"
 
+        display_name = pic.get("title") or slug
+        pic_desc = pic.get("description") or ""
+        desc_html = f"<p>{html_escape(pic_desc)}</p>" if pic_desc else ""
         entries.append(f"""  <entry>
-    <title type="html">{html_escape(slug)}</title>
-    <link href="{entry_url}" rel="alternate" type="text/html" title="{html_escape(slug)}" />
+    <title type="html">{html_escape(display_name)}</title>
+    <link href="{entry_url}" rel="alternate" type="text/html" title="{html_escape(display_name)}" />
     <published>{date}</published>
     <updated>{date}</updated>
     <id>{entry_url}</id>
-    <content type="html"><![CDATA[<figure><a href="{entry_url}"><img src="{img_url}" alt="{html_escape(slug)}" /></a></figure>]]></content>
+    <content type="html"><![CDATA[<figure><a href="{entry_url}"><img src="{img_url}" alt="{html_escape(display_name)}" /></a></figure>{desc_html}]]></content>
 {entry_author}    <media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="{img_url}" />
     <media:content medium="image" url="{img_url}" xmlns:media="http://search.yahoo.com/mrss/" />
   </entry>""")

@@ -1,0 +1,8 @@
+---
+camera: Apple iPhone 16 Pro
+lens: iPhone 16 Pro back triple camera 15.66mm f/2.8
+focal_length: 15.66mm
+aperture: f/2.8
+shutter: 1/40s
+iso: 800
+---
