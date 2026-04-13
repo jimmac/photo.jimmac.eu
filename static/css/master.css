@@ -300,12 +300,6 @@ body {
 				margin: 2rem 2rem 6rem 2rem;
 				max-width: none;
 			}
-
-			& .caption-pin {
-				width: 44px;
-				height: 44px;
-				background-size: 16px 16px;
-			}
 		}
 	}
 }
