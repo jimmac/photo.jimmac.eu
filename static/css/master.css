@@ -233,13 +233,40 @@ body {
 				background: rgba(0, 0, 0, .6);
 				box-decoration-break: clone;
 				-webkit-box-decoration-break: clone;
-				padding: 4px;
+				padding: 4px 8px;
 				animation: caption-in var(--transition-duration) var(--ease-bounce) both;
 			}
 			& .caption-title { font-size: calc(var(--text-size) * 2); font-weight: 900; line-height: 1.8; animation-delay: var(--transition-duration); }
 			& .caption-desc { font-size: calc(var(--text-size) * 1.5); font-weight: 400; line-height: 1.8; animation-delay: calc(var(--transition-duration) + .1s); }
 			& .caption-exif { font-size: calc(var(--text-size) * 1); line-height: 1.8; opacity: .7; animation-delay: calc(var(--transition-duration) + .2s); }
 			& .caption-tags { font-size: calc(var(--text-size) * 1); line-height: 1.8; opacity: .5; animation-delay: calc(var(--transition-duration) + .3s); }
+
+			& .caption-pin {
+				all: unset;
+				display: inline-block;
+				width: .7em;
+				height: .7em;
+				padding: 2px;
+				margin-right: .2em;
+				vertical-align: middle;
+				cursor: pointer;
+				border-radius: 50%;
+				background: no-repeat center / 65%;
+				background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none'%3E%3Cpath d='M3 1.5h10l-1.5 8.5h-7z' stroke='%23fff' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cline x1='8' y1='10.5' x2='8' y2='14.5' stroke='%23fff' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+				pointer-events: auto;
+				animation: caption-in var(--transition-duration) var(--ease-bounce) both;
+				animation-delay: calc(var(--transition-duration) + .4s);
+				opacity: .5;
+				transition: opacity var(--transition-duration) var(--ease-bounce),
+					background-color var(--transition-duration) var(--ease-bounce);
+
+				&:hover { opacity: .8; }
+				&.pinned {
+					opacity: 1;
+					background-color: #fff;
+					background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Cpath d='M3 1.5h10l-1.5 8.5h-7z' fill='%23000' stroke-linejoin='round'/%3E%3Cline x1='8' y1='10.5' x2='8' y2='14.5' stroke='%23000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+				}
+				}
 
 			& .caption a { color: inherit; }
 			& .caption code {
@@ -272,6 +299,12 @@ body {
 				bottom: 0;
 				margin: 2rem 2rem 6rem 2rem;
 				max-width: none;
+			}
+
+			& .caption-pin {
+				width: 44px;
+				height: 44px;
+				background-size: 16px 16px;
 			}
 		}
 	}

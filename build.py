@@ -341,8 +341,11 @@ def generate_picture_html(pic, index, pictures, config):
 
     if has_meta:
         lines.append(f'          <figcaption class="caption">')
+        pin_btn = '<button class="caption-pin" aria-label="Pin caption" title="Pin caption"></button>'
         if pic.get("title"):
-            lines.append(f'            <strong class="caption-title">{html_escape(pic["title"])}</strong>')
+            lines.append(f'            <strong class="caption-title">{pin_btn}{html_escape(pic["title"])}</strong>')
+        elif pic.get("description"):
+            lines.append(f'            {pin_btn}')
         if pic.get("description"):
             lines.append(f'            <span class="caption-desc">{inline_markdown(pic["description"])}</span>')
         # EXIF info line: camera + exposure details
@@ -460,6 +463,7 @@ def generate_javascript(config):
 
   let navDirection = null;
   let captionTimer = null;
+  let captionPinned = false;
 
   const showCaption = (item, animate) => {{
     const caption = item.querySelector('.caption');
@@ -472,7 +476,9 @@ def generate_javascript(config):
       kids.forEach(c => c.style.animation = 'none');
     }}
     clearTimeout(captionTimer);
-    captionTimer = setTimeout(() => caption.classList.add('faded'), 2000);
+    if (!captionPinned) {{
+      captionTimer = setTimeout(() => caption.classList.add('faded'), 2000);
+    }}
   }};
 
   const hideCaption = (item) => {{
@@ -524,6 +530,8 @@ def generate_javascript(config):
     const photo = document.getElementById(id);
     if (!photo) return;
     removeTargetClass();
+    captionPinned = false;
+    document.querySelectorAll('.caption-pin.pinned').forEach(p => p.classList.remove('pinned'));
     document.body.style.overflow = 'hidden';
     photo.classList.add(TARGET_CLASS);
     if (navDirection) {{
@@ -551,6 +559,8 @@ def generate_javascript(config):
 
   const closePhoto = () => {{
     clearTimeout(captionTimer);
+    captionPinned = false;
+    document.querySelectorAll('.caption-pin.pinned').forEach(p => p.classList.remove('pinned'));
     document.querySelectorAll('.' + TARGET_CLASS + ' img[data-thumb]').forEach(img => {{
       img.src = img.dataset.thumb;
       if (img.dataset.srcset) img.setAttribute('srcset', img.dataset.srcset);
@@ -613,6 +623,28 @@ def generate_javascript(config):
       e.preventDefault();
       history.replaceState(null, '', location.pathname);
       closePhoto();
+      return;
+    }}
+    const pin = e.target.closest('.caption-pin');
+    if (pin) {{
+      e.preventDefault();
+      e.stopPropagation();
+      captionPinned = !captionPinned;
+      pin.classList.toggle('pinned', captionPinned);
+      pin.animate([
+        {{ transform: 'scale(1)' }},
+        {{ transform: 'scale(1.5)' }},
+        {{ transform: 'scale(1)' }}
+      ], {{ duration: 300, easing: 'cubic-bezier(.22, 1.07, .36, 1)' }});
+      if (captionPinned) {{
+        clearTimeout(captionTimer);
+      }} else {{
+        const id = currentId();
+        if (id) {{
+          const item = document.getElementById(id);
+          if (item) showCaption(item);
+        }}
+      }}
       return;
     }}
     if (e.target.closest('.' + TARGET_CLASS + ' figure')) {{
