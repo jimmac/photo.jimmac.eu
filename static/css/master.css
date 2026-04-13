@@ -298,10 +298,19 @@ body {
 		height: var(--button-size);
 		background: var(--button-bg) no-repeat var(--icon-offset) / var(--icon-size);
 		backdrop-filter: blur(var(--blur));
-		transition: background-color .1s linear;
+		box-shadow: 0 0 0 0 var(--button-bg-hover);
+		transition: background-color var(--transition-duration) var(--ease-bounce),
+		            box-shadow var(--transition-duration) var(--ease-bounce);
 
-		&:hover { background-color: var(--button-bg-hover); }
-		&:active { background-color: var(--button-bg-active); }
+		&:hover {
+			background-color: var(--button-bg-hover);
+			box-shadow: 0 0 0 6px var(--button-bg-hover);
+		}
+		&:active {
+			background-color: var(--button-bg-active);
+			box-shadow: 0 0 0 2px var(--button-bg-active);
+			transition-duration: .1s;
+		}
 	}
 
 	& .github a    { background-image: url(../img/icon-github.svg); }
@@ -309,7 +318,13 @@ body {
 	& .mastodon a  { background-image: url(../img/icon-mastodon.svg); }
 	& .instagram a { background-image: url(../img/icon-instagram.svg); }
 	& .pixelfed a  { background-image: url(../img/icon-pixelfed.svg); }
-	& .rss a       { background-image: url(../img/icon-rss.svg); }
+	& .rss {
+		position: fixed;
+		top: var(--link-offset);
+		right: var(--link-offset);
+
+		& a { background-image: url(../img/icon-rss.svg); }
+	}
 
 	& .link a {
 		text-indent: 0;
@@ -323,6 +338,8 @@ body {
 		text-decoration: none;
 	}
 }
+
+body:has(.item.target) .links .rss { display: none; }
 
 /* 404 */
 

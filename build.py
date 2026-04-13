@@ -667,6 +667,7 @@ def generate_index_html(pictures, config):
     curl = config.get("custom_link_url", "")
     if cname and curl:
         social.append(f'        <li class="link"><a rel="me" href="{curl}" title="{cname}">{cname}</a></li>')
+    social.append(f'        <li class="rss"><a href="{base_url}/feed.xml" title="RSS Feed">RSS</a></li>')
     social_html = "\n".join(social)
 
     js = generate_javascript(config)
