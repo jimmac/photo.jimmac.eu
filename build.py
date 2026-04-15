@@ -87,6 +87,22 @@ def get_exif_metadata(filepath):
             return result
         make = (exif.get(271) or "").strip()
         model = (exif.get(272) or "").strip()
+        # DJI camera code to drone name mapping
+        DJI_CAMERA_MAP = {
+            "FC7303": "Mini 3 Pro",
+            "FC3582": "Mini 3",
+            "FC3411": "Air 2S",
+            "FC3170": "Mavic Air 2",
+            "FC2103": "Mavic 2 Pro",
+            "FC2204": "Mavic 2 Zoom",
+            "FC220": "Mavic Pro",
+            "FC330": "Phantom 4",
+            "FC6310": "Phantom 4 Pro",
+            "FC6520": "Mavic Pro Platinum",
+            "FC7203": "Mini 2",
+            "FC3170": "Air 2",
+        }
+
         # Use model, but prepend make if model doesn't already contain it
         if model:
             if make and make.lower() not in model.lower():
@@ -95,6 +111,13 @@ def get_exif_metadata(filepath):
                 result["camera"] = model
         elif make:
             result["camera"] = make
+
+        # Map DJI camera codes to friendly drone names
+        if result.get("camera") and "DJI" in result["camera"]:
+            for code, drone_name in DJI_CAMERA_MAP.items():
+                if code in result["camera"]:
+                    result["camera"] = f"DJI {drone_name}"
+                    break
         # Exposure time (tag 33434)
         exp = exif.get(33434)
         if exp:
@@ -348,19 +371,22 @@ def generate_picture_html(pic, index, pictures, config):
             lines.append(f'            {pin_btn}')
         if pic.get("description"):
             lines.append(f'            <span class="caption-desc">{inline_markdown(pic["description"])}</span>')
-        # EXIF info line: camera + exposure details
+        # EXIF info line: camera + exposure details, f-stop as badge
         exif_parts = []
         if pic.get("camera"):
             exif_parts.append(html_escape(pic["camera"]))
+
+        # Build exposure string with aperture as special badge (with bullets)
         exposure = []
         if pic.get("focal_length"):
             exposure.append(html_escape(pic["focal_length"]))
         if pic.get("aperture"):
-            exposure.append(html_escape(pic["aperture"]))
+            exposure.append(f'<span class="aperture-badge">{html_escape(pic["aperture"])}</span>')
         if pic.get("shutter"):
             exposure.append(html_escape(pic["shutter"]))
         if pic.get("iso"):
             exposure.append(f'ISO {html_escape(pic["iso"])}')
+
         if exif_parts or exposure:
             camera_str = exif_parts[0] if exif_parts else ""
             exposure_str = " \u2022 ".join(exposure)
