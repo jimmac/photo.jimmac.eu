@@ -7,9 +7,9 @@
 	--icon-size: 16px;
 	--icon-offset: 8px;
 	--blur: 20px;
-	--button-bg: rgba(200, 200, 200, .25);
-	--button-bg-hover: rgba(200, 200, 200, .5);
-	--button-bg-active: rgba(200, 200, 200, .25);
+	--button-bg: rgba(255, 255, 255, .45);
+	--button-bg-hover: rgba(255, 255, 255, .65);
+	--button-bg-active: rgba(255, 255, 255, .5);
 	--overlay-hover: rgba(0, 0, 0, .25);
 	--overlay-active: rgba(0, 0, 0, .5);
 	--nav-width: 80px;
@@ -332,7 +332,7 @@ body {
 		width: var(--button-size);
 		height: var(--button-size);
 		background: var(--button-bg) no-repeat var(--icon-offset) / var(--icon-size);
-		backdrop-filter: blur(var(--blur));
+		backdrop-filter: blur(var(--blur)) saturate(180%) contrast(120%);
 		box-shadow: 0 0 0 0 var(--button-bg-hover);
 		transition: background-color var(--transition-duration) var(--ease-bounce),
 		            box-shadow var(--transition-duration) var(--ease-bounce);
