@@ -694,14 +694,70 @@ def generate_javascript(config):
   }};
 
   const tintCanvas = document.createElement('canvas');
-  tintCanvas.width = tintCanvas.height = 1;
   const tintCtx = tintCanvas.getContext('2d', {{ willReadFrequently: true }});
 
-  const avgColor = (img) => {{
+  const sampleBorderColors = (img) => {{
     try {{
-      tintCtx.drawImage(img, 0, 0, 1, 1);
-      const [r, g, b] = tintCtx.getImageData(0, 0, 1, 1).data;
-      return `rgb(${{r}},${{g}},${{b}})`;
+      // Sample size for edge detection
+      const sampleSize = 64;
+      const edgeWidth = 8; // How many pixels from the edge to sample
+
+      tintCanvas.width = sampleSize;
+      tintCanvas.height = sampleSize;
+      tintCtx.drawImage(img, 0, 0, sampleSize, sampleSize);
+
+      let r = 0, g = 0, b = 0, count = 0;
+
+      // Sample top edge
+      for (let x = 0; x < sampleSize; x++) {{
+        for (let y = 0; y < edgeWidth; y++) {{
+          const pixel = tintCtx.getImageData(x, y, 1, 1).data;
+          r += pixel[0]; g += pixel[1]; b += pixel[2]; count++;
+        }}
+      }}
+
+      // Sample bottom edge
+      for (let x = 0; x < sampleSize; x++) {{
+        for (let y = sampleSize - edgeWidth; y < sampleSize; y++) {{
+          const pixel = tintCtx.getImageData(x, y, 1, 1).data;
+          r += pixel[0]; g += pixel[1]; b += pixel[2]; count++;
+        }}
+      }}
+
+      // Sample left edge
+      for (let x = 0; x < edgeWidth; x++) {{
+        for (let y = edgeWidth; y < sampleSize - edgeWidth; y++) {{
+          const pixel = tintCtx.getImageData(x, y, 1, 1).data;
+          r += pixel[0]; g += pixel[1]; b += pixel[2]; count++;
+        }}
+      }}
+
+      // Sample right edge
+      for (let x = sampleSize - edgeWidth; x < sampleSize; x++) {{
+        for (let y = edgeWidth; y < sampleSize - edgeWidth; y++) {{
+          const pixel = tintCtx.getImageData(x, y, 1, 1).data;
+          r += pixel[0]; g += pixel[1]; b += pixel[2]; count++;
+        }}
+      }}
+
+      r = Math.round(r / count);
+      g = Math.round(g / count);
+      b = Math.round(b / count);
+
+      // Darken the color for better contrast with photo
+      const darkenFactor = 0.55;
+      const r1 = Math.round(r * darkenFactor);
+      const g1 = Math.round(g * darkenFactor);
+      const b1 = Math.round(b * darkenFactor);
+
+      // Even darker for outer edges
+      const darkerFactor = 0.35;
+      const r2 = Math.round(r * darkerFactor);
+      const g2 = Math.round(g * darkerFactor);
+      const b2 = Math.round(b * darkerFactor);
+
+      // Create a radial gradient for depth
+      return `radial-gradient(ellipse at center, rgb(${{r1}},${{g1}},${{b1}}) 0%, rgb(${{r2}},${{g2}},${{b2}}) 100%)`;
     }} catch (e) {{ return null; }}
   }};
 
@@ -805,8 +861,8 @@ def generate_javascript(config):
     }}
     const img = photo.querySelector('img');
     if (img) {{
-      const tint = avgColor(img);
-      if (tint) photo.style.backgroundColor = tint;
+      const tint = sampleBorderColors(img);
+      if (tint) photo.style.backgroundImage = tint;
       img.dataset.thumb = img.src;
       img.dataset.srcset = img.getAttribute('srcset') || '';
       img.dataset.sizes = img.getAttribute('sizes') || '';
@@ -823,6 +879,9 @@ def generate_javascript(config):
     clearTimeout(captionTimer);
     captionPinned = false;
     document.querySelectorAll('.caption-pin.pinned').forEach(p => p.classList.remove('pinned'));
+    document.querySelectorAll('.' + TARGET_CLASS).forEach(item => {{
+      item.style.backgroundImage = '';
+    }});
     document.querySelectorAll('.' + TARGET_CLASS + ' img[data-thumb]').forEach(img => {{
       img.src = img.dataset.thumb;
       if (img.dataset.srcset) img.setAttribute('srcset', img.dataset.srcset);
