@@ -698,6 +698,11 @@ def generate_javascript(config):
 
   const sampleBorderColors = (img) => {{
     try {{
+      // Make sure image is loaded and complete
+      if (!img.complete || !img.naturalWidth) {{
+        return 'radial-gradient(ellipse at center, rgb(28,28,28) 0%, rgb(14,14,14) 100%)';
+      }}
+
       // Sample size for edge detection
       const sampleSize = 64;
       const edgeWidth = 8; // How many pixels from the edge to sample
@@ -758,7 +763,10 @@ def generate_javascript(config):
 
       // Create a radial gradient for depth
       return `radial-gradient(ellipse at center, rgb(${{r1}},${{g1}},${{b1}}) 0%, rgb(${{r2}},${{g2}},${{b2}}) 100%)`;
-    }} catch (e) {{ return null; }}
+    }} catch (e) {{
+      // Fallback to dark gray gradient on error
+      return 'radial-gradient(ellipse at center, rgb(28,28,28) 0%, rgb(14,14,14) 100%)';
+    }}
   }};
 
   let navDirection = null;
@@ -861,8 +869,10 @@ def generate_javascript(config):
     }}
     const img = photo.querySelector('img');
     if (img) {{
+      // Set backdrop based on border colors
       const tint = sampleBorderColors(img);
-      if (tint) photo.style.backgroundImage = tint;
+      photo.style.backgroundImage = tint;
+
       img.dataset.thumb = img.src;
       img.dataset.srcset = img.getAttribute('srcset') || '';
       img.dataset.sizes = img.getAttribute('sizes') || '';
