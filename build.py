@@ -647,11 +647,6 @@ def generate_javascript(config):
       }}
       return;
     }}
-    if (e.target.closest('.' + TARGET_CLASS + ' figure')) {{
-      navDirection = 'next';
-      clickNav('.next');
-      return;
-    }}
     const s = e.target.closest('[data-share-slug]');
     if (s) {{
       e.preventDefault();
