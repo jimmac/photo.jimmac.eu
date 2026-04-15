@@ -294,6 +294,224 @@ def scan_and_sort_pictures():
     return pictures
 
 
+def calculate_library_stats(pictures):
+    """Calculate statistics about the photo library."""
+    stats = {
+        "total": len(pictures),
+        "cameras": {},
+        "apertures": {},
+        "focal_lengths": {},
+        "orientations": {"portrait": 0, "landscape": 0, "square": 0},
+        "time_of_day": {"night": 0, "morning": 0, "afternoon": 0, "evening": 0},
+        "seasons": {"winter": 0, "spring": 0, "summer": 0, "fall": 0},
+        "oldest_date": None,
+        "newest_date": None
+    }
+
+    for pic in pictures:
+        # Orientation
+        if pic["width"] < pic["height"]:
+            stats["orientations"]["portrait"] += 1
+        elif pic["width"] > pic["height"]:
+            stats["orientations"]["landscape"] += 1
+        else:
+            stats["orientations"]["square"] += 1
+
+        # Camera
+        if pic.get("camera"):
+            camera = pic["camera"]
+            stats["cameras"][camera] = stats["cameras"].get(camera, 0) + 1
+
+        # Aperture
+        if pic.get("aperture"):
+            aperture = pic["aperture"]
+            stats["apertures"][aperture] = stats["apertures"].get(aperture, 0) + 1
+
+        # Focal length
+        if pic.get("focal_length"):
+            fl = pic["focal_length"]
+            stats["focal_lengths"][fl] = stats["focal_lengths"].get(fl, 0) + 1
+
+        # Date range
+        if pic.get("exif_date"):
+            date = pic["exif_date"]
+            if stats["oldest_date"] is None or date < stats["oldest_date"]:
+                stats["oldest_date"] = date
+            if stats["newest_date"] is None or date > stats["newest_date"]:
+                stats["newest_date"] = date
+
+            # Time of day (hour 0-23)
+            hour = date.hour
+            if 0 <= hour < 6 or 20 <= hour < 24:
+                stats["time_of_day"]["night"] += 1
+            elif 6 <= hour < 12:
+                stats["time_of_day"]["morning"] += 1
+            elif 12 <= hour < 17:
+                stats["time_of_day"]["afternoon"] += 1
+            else:  # 17-20
+                stats["time_of_day"]["evening"] += 1
+
+            # Season (month 1-12)
+            month = date.month
+            if month in [12, 1, 2]:
+                stats["seasons"]["winter"] += 1
+            elif month in [3, 4, 5]:
+                stats["seasons"]["spring"] += 1
+            elif month in [6, 7, 8]:
+                stats["seasons"]["summer"] += 1
+            else:  # 9, 10, 11
+                stats["seasons"]["fall"] += 1
+
+    # Sort by frequency (descending)
+    stats["cameras"] = dict(sorted(stats["cameras"].items(), key=lambda x: x[1], reverse=True))
+    stats["apertures"] = dict(sorted(stats["apertures"].items(), key=lambda x: x[1], reverse=True))
+    stats["focal_lengths"] = dict(sorted(stats["focal_lengths"].items(), key=lambda x: x[1], reverse=True))
+
+    return stats
+
+
+def generate_stats_modal_html(stats):
+    """Generate HTML for the library statistics modal."""
+    total = stats["total"]
+
+    # Format date range
+    date_range = ""
+    if stats["oldest_date"] and stats["newest_date"]:
+        oldest = stats["oldest_date"].strftime("%B %Y")
+        newest = stats["newest_date"].strftime("%B %Y")
+        date_range = f"{oldest} – {newest}"
+
+    # Orientation percentages
+    orientations = stats["orientations"]
+    portrait_pct = round(100 * orientations["portrait"] / total) if total > 0 else 0
+    landscape_pct = round(100 * orientations["landscape"] / total) if total > 0 else 0
+    square_pct = round(100 * orientations["square"] / total) if total > 0 else 0
+
+    # Top cameras (limit to top 8)
+    camera_rows = ""
+    for camera, count in list(stats["cameras"].items())[:8]:
+        pct = round(100 * count / total) if total > 0 else 0
+        camera_rows += f'''
+        <tr>
+          <td>{html_escape(camera)}</td>
+          <td>{count}</td>
+          <td>
+            <div class="stat-bar">
+              <div class="stat-fill" style="width: {pct}%"></div>
+            </div>
+          </td>
+        </tr>'''
+
+    # Top 2 apertures
+    aperture_items = list(stats["apertures"].items())[:2]
+    aperture_text = " · ".join([f'<span class="aperture-badge">{html_escape(ap)}</span> ({count})' for ap, count in aperture_items]) if aperture_items else "—"
+
+    # Top 2 focal lengths
+    focal_items = list(stats["focal_lengths"].items())[:2]
+    focal_text = " · ".join([f"{html_escape(fl)} ({count})" for fl, count in focal_items]) if focal_items else "—"
+
+    # Time of day percentages
+    tod = stats["time_of_day"]
+    tod_total = sum(tod.values())
+    morning_pct = round(100 * tod["morning"] / tod_total) if tod_total > 0 else 0
+    afternoon_pct = round(100 * tod["afternoon"] / tod_total) if tod_total > 0 else 0
+    evening_pct = round(100 * tod["evening"] / tod_total) if tod_total > 0 else 0
+    night_pct = round(100 * tod["night"] / tod_total) if tod_total > 0 else 0
+
+    # Season percentages
+    seasons = stats["seasons"]
+    season_total = sum(seasons.values())
+    winter_pct = round(100 * seasons["winter"] / season_total) if season_total > 0 else 0
+    spring_pct = round(100 * seasons["spring"] / season_total) if season_total > 0 else 0
+    summer_pct = round(100 * seasons["summer"] / season_total) if season_total > 0 else 0
+    fall_pct = round(100 * seasons["fall"] / season_total) if season_total > 0 else 0
+
+    return f'''
+<div id="library-stats" class="stats-modal" style="display: none;">
+  <div class="stats-overlay"></div>
+  <div class="stats-content">
+    <div class="stats-header">
+      <h2>Library Summary</h2>
+      <a href="#" class="close" title="Close">Close</a>
+    </div>
+
+    <div class="stats-body">
+      <div class="stats-hero">
+        <div class="stat-big">{total} Photos</div>
+        <div class="stat-subtitle">{date_range}</div>
+      </div>
+
+      <section class="stats-section">
+        <h3>Camera Models</h3>
+        <table class="stats-table">
+          <tbody>{camera_rows}
+          </tbody>
+        </table>
+      </section>
+
+      <div class="stats-grid">
+        <section class="stats-section">
+          <h3>Aperture</h3>
+          <div class="stat-text">{aperture_text}</div>
+        </section>
+
+        <section class="stats-section">
+          <h3>Focal Length</h3>
+          <div class="stat-text">{focal_text}</div>
+        </section>
+      </div>
+
+      <section class="stats-section">
+        <h3>Orientation</h3>
+        <div class="orientation-bars">
+          <div class="orientation-row">
+            <span>Portrait</span>
+            <div class="stat-bar">
+              <div class="stat-fill" style="width: {portrait_pct}%"></div>
+            </div>
+            <span>{portrait_pct}%</span>
+          </div>
+          <div class="orientation-row">
+            <span>Landscape</span>
+            <div class="stat-bar">
+              <div class="stat-fill" style="width: {landscape_pct}%"></div>
+            </div>
+            <span>{landscape_pct}%</span>
+          </div>
+          <div class="orientation-row">
+            <span>Square</span>
+            <div class="stat-bar">
+              <div class="stat-fill" style="width: {square_pct}%"></div>
+            </div>
+            <span>{square_pct}%</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-section">
+        <h3>Time of Day</h3>
+        <div class="stat-badges">
+          <span class="stat-badge">Morning {morning_pct}%</span>
+          <span class="stat-badge">Afternoon {afternoon_pct}%</span>
+          <span class="stat-badge">Evening {evening_pct}%</span>
+          <span class="stat-badge">Night {night_pct}%</span>
+        </div>
+      </section>
+
+      <section class="stats-section">
+        <h3>Seasons</h3>
+        <div class="stat-badges">
+          <span class="stat-badge">Winter {winter_pct}%</span>
+          <span class="stat-badge">Spring {spring_pct}%</span>
+          <span class="stat-badge">Summer {summer_pct}%</span>
+          <span class="stat-badge">Fall {fall_pct}%</span>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>'''
+
+
 def process_image(src_path, slug):
     is_gif = src_path.suffix.lower() == ".gif"
     for size_name, max_dims in SIZES.items():
@@ -366,7 +584,7 @@ def generate_picture_html(pic, index, pictures, config):
         lines.append(f'          <figcaption class="caption">')
         pin_btn = '<button class="caption-pin" aria-label="Pin caption" title="Pin caption"></button>'
         if pic.get("title"):
-            lines.append(f'            <strong class="caption-title">{pin_btn}{html_escape(pic["title"])}</strong>')
+            lines.append(f'            <strong class="caption-title">{html_escape(pic["title"])}{pin_btn}</strong>')
         elif pic.get("description"):
             lines.append(f'            {pin_btn}')
         if pic.get("description"):
@@ -681,10 +899,42 @@ def generate_javascript(config):
   }});
 
   if (location.hash) handleHash();
+
+  const statsModal = document.getElementById('library-stats');
+  const statsClose = document.querySelector('.stats-header .close');
+  const statsOverlay = document.querySelector('.stats-overlay');
+
+  // Open stats modal
+  document.addEventListener('click', (e) => {{
+    if (e.target.closest('a[href="#library-stats"]')) {{
+      e.preventDefault();
+      statsModal.style.display = 'grid';
+      document.body.style.overflow = 'hidden';
+    }}
+  }});
+
+  // Close stats modal
+  const closeStats = () => {{
+    statsModal.style.display = 'none';
+    document.body.style.overflow = '';
+  }};
+
+  if (statsClose) statsClose.addEventListener('click', (e) => {{
+    e.preventDefault();
+    closeStats();
+  }});
+  if (statsOverlay) statsOverlay.addEventListener('click', closeStats);
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {{
+    if (e.key === 'Escape' && statsModal.style.display !== 'none') {{
+      closeStats();
+    }}
+  }});
 </script>"""
 
 
-def generate_index_html(pictures, config):
+def generate_index_html(pictures, stats, config):
     """Generate the complete single-page HTML."""
     site_title = config.get("title", "photo.jimmac.eu")
     description = config.get("description", "")
@@ -720,8 +970,11 @@ def generate_index_html(pictures, config):
     curl = config.get("custom_link_url", "")
     if cname and curl:
         social.append(f'        <li class="link"><a rel="me" href="{curl}" title="{cname}">{cname}</a></li>')
+    social.append(f'        <li class="info"><a href="#library-stats" title="Library Summary">Info</a></li>')
     social.append(f'        <li class="rss"><a href="{base_url}/feed.xml" title="RSS Feed">RSS</a></li>')
     social_html = "\n".join(social)
+
+    stats_modal_html = generate_stats_modal_html(stats)
 
     js = generate_javascript(config)
 
@@ -762,6 +1015,7 @@ def generate_index_html(pictures, config):
 {social_html}
     </ul>
   </nav>
+{stats_modal_html}
 {js}
 </body>
 </html>
@@ -917,6 +1171,7 @@ def main():
 
     print("2. Scanning pictures and extracting EXIF data...")
     pictures = scan_and_sort_pictures()
+    stats = calculate_library_stats(pictures)
     print(f"   Found {len(pictures)} pictures")
 
     print("3. Processing images...")
@@ -936,7 +1191,7 @@ def main():
     copy_static_assets()
 
     print("6. Generating index.html...")
-    (OUTPUT_DIR / "index.html").write_text(generate_index_html(pictures, config))
+    (OUTPUT_DIR / "index.html").write_text(generate_index_html(pictures, stats, config))
 
     print("7. Generating 404.html...")
     (OUTPUT_DIR / "404.html").write_text(generate_404_html(config))
