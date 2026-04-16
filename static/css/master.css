@@ -194,7 +194,6 @@ body {
 				}
 
 				& .share { background-image: url(../img/icon-share.svg); }
-				& .download { background-image: url(../img/icon-download.svg); }
 			}
 
 			/* CAPTION — lightbox metadata */
