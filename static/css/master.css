@@ -314,6 +314,13 @@ body {
 		height: var(--button-size-large);
 		background-size: var(--icon-size-large);
 		background-position: var(--icon-offset-large);
+
+		@media (max-aspect-ratio: 1/1) and (max-width: 640px) {
+			width: var(--button-size);
+			height: var(--button-size);
+			background-size: var(--icon-size);
+			background-position: var(--icon-offset);
+		}
 	}
 
 	&.close {
