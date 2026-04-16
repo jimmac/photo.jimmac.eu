@@ -846,6 +846,8 @@ def generate_javascript(config):
       showCaption(item);
     }} else {{
       captionManuallyHidden = true;
+      captionPinned = false;
+      item.querySelectorAll('.caption-pin.pinned').forEach(p => p.classList.remove('pinned'));
       hideCaption(item);
     }}
   }};
