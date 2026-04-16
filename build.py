@@ -444,7 +444,7 @@ def generate_stats_modal_html(stats):
   <div class="stats-overlay"></div>
   <div class="stats-content">
     <div class="stats-header">
-      <h2>Library Summary</h2>
+      <h2>Jakub Steiner: Shooting Stats</h2>
       <a href="#" class="button close" title="Close">Close</a>
     </div>
 
