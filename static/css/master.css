@@ -542,6 +542,23 @@ body:has(.item.target) .links :is(.rss, .info) { display: none; }
 	}
 }
 
+.stats-footer {
+	font-size: 13px;
+	opacity: .5;
+	text-align: center;
+	margin: 0;
+	padding-top: 8px;
+	border-top: 1px solid rgba(255, 255, 255, .1);
+
+	& a {
+		color: inherit;
+		text-decoration: underline;
+		text-underline-offset: 2px;
+
+		&:hover { opacity: 1; }
+	}
+}
+
 .stats-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;

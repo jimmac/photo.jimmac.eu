@@ -520,6 +520,7 @@ def generate_stats_modal_html(stats):
           <div class="stat-badge{' top' if top_season == 'winter' else ''}"><span class="stat-label">{icon_winter} Winter</span><span class="stat-pct">{winter_pct}%</span><div class="stat-bar"><div class="stat-fill" style="width: {winter_pct}%"></div></div></div>
         </div>
       </section>
+      <p class="stats-footer">Like the photos? Check out <a href="https://blog.jimmac.eu">my blog</a> and <a href="https://art.jimmac.eu">digital art</a>.</p>
     </div>
   </div>
 </div>'''
