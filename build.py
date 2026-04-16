@@ -426,6 +426,19 @@ def generate_stats_modal_html(stats):
     summer_pct = round(100 * seasons["summer"] / season_total) if season_total > 0 else 0
     fall_pct = round(100 * seasons["fall"] / season_total) if season_total > 0 else 0
 
+    # Determine the most common time of day and season
+    tod_pcts = {"morning": morning_pct, "afternoon": afternoon_pct, "evening": evening_pct, "night": night_pct}
+    top_tod = max(tod_pcts, key=tod_pcts.get)
+    season_pcts = {"spring": spring_pct, "summer": summer_pct, "fall": fall_pct, "winter": winter_pct}
+    top_season = max(season_pcts, key=season_pcts.get)
+
+    # Read season icon SVGs for inlining
+    icon_dir = STATIC_DIR / "img"
+    icon_winter = (icon_dir / "icon-winter.svg").read_text().strip()
+    icon_spring = (icon_dir / "icon-spring.svg").read_text().strip()
+    icon_summer = (icon_dir / "icon-summer.svg").read_text().strip()
+    icon_fall = (icon_dir / "icon-fall.svg").read_text().strip()
+
     return f'''
 <div id="library-stats" class="stats-modal" style="display: none;">
   <div class="stats-overlay"></div>
@@ -491,20 +504,20 @@ def generate_stats_modal_html(stats):
       <section class="stats-section">
         <h3>Time of Day</h3>
         <div class="stat-badges">
-          <span class="stat-badge">Morning {morning_pct}%</span>
-          <span class="stat-badge">Afternoon {afternoon_pct}%</span>
-          <span class="stat-badge">Evening {evening_pct}%</span>
-          <span class="stat-badge">Night {night_pct}%</span>
+          <div class="stat-badge{' top' if top_tod == 'morning' else ''}"><span class="stat-label">Morning</span><span class="stat-pct">{morning_pct}%</span><div class="stat-bar"><div class="stat-fill" style="width: {morning_pct}%"></div></div></div>
+          <div class="stat-badge{' top' if top_tod == 'afternoon' else ''}"><span class="stat-label">Afternoon</span><span class="stat-pct">{afternoon_pct}%</span><div class="stat-bar"><div class="stat-fill" style="width: {afternoon_pct}%"></div></div></div>
+          <div class="stat-badge{' top' if top_tod == 'evening' else ''}"><span class="stat-label">Evening</span><span class="stat-pct">{evening_pct}%</span><div class="stat-bar"><div class="stat-fill" style="width: {evening_pct}%"></div></div></div>
+          <div class="stat-badge{' top' if top_tod == 'night' else ''}"><span class="stat-label">Night</span><span class="stat-pct">{night_pct}%</span><div class="stat-bar"><div class="stat-fill" style="width: {night_pct}%"></div></div></div>
         </div>
       </section>
 
       <section class="stats-section">
         <h3>Seasons</h3>
         <div class="stat-badges">
-          <span class="stat-badge">Winter {winter_pct}%</span>
-          <span class="stat-badge">Spring {spring_pct}%</span>
-          <span class="stat-badge">Summer {summer_pct}%</span>
-          <span class="stat-badge">Fall {fall_pct}%</span>
+          <div class="stat-badge{' top' if top_season == 'spring' else ''}"><span class="stat-label">{icon_spring} Spring</span><span class="stat-pct">{spring_pct}%</span><div class="stat-bar"><div class="stat-fill" style="width: {spring_pct}%"></div></div></div>
+          <div class="stat-badge{' top' if top_season == 'summer' else ''}"><span class="stat-label">{icon_summer} Summer</span><span class="stat-pct">{summer_pct}%</span><div class="stat-bar"><div class="stat-fill" style="width: {summer_pct}%"></div></div></div>
+          <div class="stat-badge{' top' if top_season == 'fall' else ''}"><span class="stat-label">{icon_fall} Fall</span><span class="stat-pct">{fall_pct}%</span><div class="stat-bar"><div class="stat-fill" style="width: {fall_pct}%"></div></div></div>
+          <div class="stat-badge{' top' if top_season == 'winter' else ''}"><span class="stat-label">{icon_winter} Winter</span><span class="stat-pct">{winter_pct}%</span><div class="stat-bar"><div class="stat-fill" style="width: {winter_pct}%"></div></div></div>
         </div>
       </section>
     </div>

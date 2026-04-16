@@ -557,18 +557,45 @@ body:has(.item.target) .links :is(.rss, .info) { display: none; }
 }
 
 .stat-badges {
-	display: flex;
-	flex-wrap: wrap;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
 	gap: 8px;
 }
 
 .stat-badge {
-	display: inline-block;
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 4px 6px;
+	align-items: center;
 	font-size: 14px;
-	padding: 6px 12px;
+	padding: 8px 12px;
 	background: rgba(255, 255, 255, .15);
 	border-radius: 8px;
 	opacity: .85;
+
+	& .stat-label {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	&.top .stat-label {
+		font-weight: 700;
+	}
+
+	& .stat-pct {
+		text-align: right;
+		opacity: .7;
+	}
+
+	& .stat-bar {
+		grid-column: 1 / -1;
+	}
+
+	& svg {
+		flex-shrink: 0;
+		opacity: .7;
+	}
 }
 
 .stats-table {
