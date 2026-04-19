@@ -912,6 +912,18 @@ def generate_javascript(config):
     }}
     showCaption(photo, true);
     document.title = photo.title;
+
+    // Force cursor update after navigation
+    setTimeout(() => {{
+      if (window.lastMouseX !== undefined && window.lastMouseY !== undefined) {{
+        const element = document.elementFromPoint(window.lastMouseX, window.lastMouseY);
+        if (element) {{
+          const computedStyle = window.getComputedStyle(element);
+          document.body.style.cursor = computedStyle.cursor;
+          setTimeout(() => {{ document.body.style.cursor = ''; }}, 10);
+        }}
+      }}
+    }}, 50);
   }};
 
   const closePhoto = () => {{
@@ -957,7 +969,9 @@ def generate_javascript(config):
     if (e.key === 'i' || e.key === 'I') {{ toggleCaption(); e.preventDefault(); }}
   }});
 
-  document.addEventListener('mousemove', () => {{
+  document.addEventListener('mousemove', (e) => {{
+    window.lastMouseX = e.clientX;
+    window.lastMouseY = e.clientY;
     if (captionManuallyHidden) return;
     const id = currentId();
     if (!id) return;
