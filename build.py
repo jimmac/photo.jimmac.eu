@@ -1139,6 +1139,7 @@ def generate_index_html(pictures, stats, config):
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="apple-touch-icon" href="/touch-icon-iphone.png">
     <link rel="mask-icon" href="/favicon.svg">
+    <script src="https://cdn.counter.dev/script.js" data-id="351fc2c1-521e-4fee-b194-7160cce76150" data-utcoffset="2"></script>
 </head>
 <body>
   <main>
